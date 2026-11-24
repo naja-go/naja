@@ -1,43 +1,17 @@
-<div align="center">
-<a href="https://cobra.dev">
-<img width="512" height="535" alt="cobra-logo" src="https://github.com/user-attachments/assets/c8bf9aad-b5ae-41d3-8899-d83baec10af8" />
-</a>
-</div>
+# Naja
 
-Cobra is a library for creating powerful modern CLI applications.
+Naja is a Go library for building command-line applications and a hard fork of
+[Cobra](https://github.com/spf13/cobra).
 
-<a href="https://cobra.dev">Visit Cobra.dev for extensive documentation</a> 
-
-
-Cobra is used in many Go projects such as [Kubernetes](https://kubernetes.io/),
-[Hugo](https://gohugo.io), and [GitHub CLI](https://github.com/cli/cli) to
-name a few. [This list](site/content/projects_using_cobra.md) contains a more extensive list of projects using Cobra.
-
-[![](https://img.shields.io/github/actions/workflow/status/spf13/cobra/test.yml?branch=main&longCache=true&label=Test&logo=github%20actions&logoColor=fff)](https://github.com/spf13/cobra/actions?query=workflow%3ATest)
-[![Go Reference](https://pkg.go.dev/badge/github.com/spf13/cobra.svg)](https://pkg.go.dev/github.com/spf13/cobra)
-[![Go Report Card](https://goreportcard.com/badge/github.com/spf13/cobra)](https://goreportcard.com/report/github.com/spf13/cobra)
-[![Slack](https://img.shields.io/badge/Slack-cobra-brightgreen)](https://gophers.slack.com/archives/CD3LP1199)
-<hr>
-<div align="center" markdown="1">
-   <sup>Supported by:</sup>
-   <br>
-   <br>
-   <a href="https://www.warp.dev/cobra">
-      <img alt="Warp sponsorship" width="400" src="https://github.com/user-attachments/assets/ab8dd143-b0fd-4904-bdc5-dd7ecac94eae">
-   </a>
-
-### [Warp, the AI terminal for devs](https://www.warp.dev/cobra)
-[Try Cobra in Warp today](https://www.warp.dev/cobra)<br>
-
-</div>
-<hr>
+[![Test](https://github.com/naja-go/naja/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/naja-go/naja/actions/workflows/test.yml)
+[![Go Reference](https://pkg.go.dev/badge/github.com/naja-go/naja.svg)](https://pkg.go.dev/github.com/naja-go/naja)
+[![Go Report Card](https://goreportcard.com/badge/github.com/naja-go/naja)](https://goreportcard.com/report/github.com/naja-go/naja)
 
 # Overview
 
-Cobra is a library providing a simple interface to create powerful modern CLI
-interfaces similar to git & go tools.
+Naja helps build CLIs with subcommands, like `git` and `go`.
 
-Cobra provides:
+Naja provides:
 * Easy subcommand-based CLIs: `app server`, `app fetch`, etc.
 * Fully POSIX-compliant flags (including short & long versions)
 * Nested subcommands
@@ -54,7 +28,7 @@ Cobra provides:
 
 # Concepts
 
-Cobra is built on a structure of commands, arguments & flags.
+Naja is built on a structure of commands, arguments & flags.
 
 **Commands** represent actions, **Args** are things and **Flags** are modifiers for those actions.
 
@@ -84,13 +58,13 @@ have children commands and optionally run an action.
 
 In the example above, 'server' is the command.
 
-[More about cobra.Command](https://pkg.go.dev/github.com/spf13/cobra#Command)
+[More about naja.Command](https://pkg.go.dev/github.com/naja-go/naja#Command)
 
 ## Flags
 
-A flag is a way to modify the behavior of a command. Cobra supports
+A flag is a way to modify the behavior of a command. Naja supports
 fully POSIX-compliant flags as well as the Go [flag package](https://golang.org/pkg/flag/).
-A Cobra command can define flags that persist through to children commands
+A Naja command can define flags that persist through to children commands
 and flags that are only available to that command.
 
 In the example above, 'port' is the flag.
@@ -101,36 +75,21 @@ which maintains the same interface while adding POSIX compliance.
 
 # Installing
 
-This fork requires Go 1.27 or newer.
+Naja requires Go 1.27 or newer.
 
-Using Cobra is easy. First, use `go get` to install the latest version
-of the library.
-
-```
-go get -u github.com/spf13/cobra@latest
+```sh
+go get github.com/naja-go/naja@main
 ```
 
-Next, include Cobra in your application:
-
-```go
-import "github.com/spf13/cobra"
-```
+Then import `github.com/naja-go/naja` as package `naja`. If you generate
+documentation, import `github.com/naja-go/naja/doc` as package `doc`.
 
 # Usage
-`cobra-cli` is a command line program to generate cobra applications and command files.
-It will bootstrap your application scaffolding to rapidly
-develop a Cobra-based application. It is the easiest way to incorporate Cobra into your application.
 
-It can be installed by running:
-
-```
-go install github.com/spf13/cobra-cli@latest
-```
-
-For complete details on using the Cobra-CLI generator, please read [The Cobra Generator README](https://github.com/spf13/cobra-cli/blob/main/README.md)
-
-For complete details on using the Cobra library, please read [The Cobra User Guide](site/content/user_guide.md).
+See the [user guide](site/content/user_guide.md) to build your first command.
+If you're migrating from Cobra, update both import paths and change references
+such as `cobra.Command` to `naja.Command`.
 
 # License
 
-Cobra is released under the Apache 2.0 license. See [LICENSE.txt](LICENSE.txt)
+Naja is released under the Apache 2.0 license. See [LICENSE.txt](LICENSE.txt).

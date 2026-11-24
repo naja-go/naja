@@ -1,6 +1,6 @@
-# Generating Man Pages For Your Own cobra.Command
+# Generating Man Pages for a naja.Command
 
-Generating man pages from a cobra command is incredibly easy. An example is as follows:
+Generate man pages from a Naja command:
 
 ```go
 package main
@@ -8,12 +8,12 @@ package main
 import (
 	"log"
 
-	"github.com/spf13/cobra"
-	"github.com/spf13/cobra/doc"
+	"github.com/naja-go/naja"
+	"github.com/naja-go/naja/doc"
 )
 
 func main() {
-	cmd := &cobra.Command{
+	cmd := &naja.Command{
 		Use:   "test",
 		Short: "my test program",
 	}

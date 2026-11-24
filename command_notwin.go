@@ -14,6 +14,6 @@
 
 //go:build !windows
 
-package cobra
+package naja
 
 var preExecHookFn func(*Command)

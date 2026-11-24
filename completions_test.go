@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cobra
+package naja
 
 import (
 	"bytes"
@@ -4089,7 +4089,7 @@ func TestCompletionDoesNotMutateOsArgs(t *testing.T) {
 
 	// Set os.Args to simulate: root __completeNoDesc x
 	// We do NOT use SetArgs so the code falls through to os.Args[1:].
-	// The program name must not be "cobra.test" to bypass the test guard
+	// The program name must not be "naja.test" to bypass the test guard
 	// in ExecuteC().
 	os.Args = []string{"root", ShellCompNoDescRequestCmd, "x"}
 

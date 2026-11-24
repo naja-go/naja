@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cobra
+package naja
 
 import (
 	"os"
@@ -228,7 +228,7 @@ func TestRpad(t *testing.T) {
 	}
 }
 
-// TestDeadcodeElimination checks that a simple program using cobra in its
+// TestDeadcodeElimination checks that a simple program using naja in its
 // default configuration is linked taking full advantage of the linker's
 // deadcode elimination step.
 //
@@ -237,7 +237,7 @@ func TestRpad(t *testing.T) {
 // unreachable, making deadcode elimination less effective. Using
 // text/template and html/template makes reflect.Value.MethodByName
 // reachable.
-// Since cobra can use text/template templates this test checks that in its
+// Since naja can use text/template templates this test checks that in its
 // default configuration that code path can be proven to be unreachable by
 // the linker.
 //
@@ -247,7 +247,7 @@ func TestDeadcodeElimination(t *testing.T) {
 		t.Skip("go tool nm fails on windows")
 	}
 
-	// check that a simple program using cobra in its default configuration is
+	// check that a simple program using naja in its default configuration is
 	// linked with deadcode elimination enabled.
 	const (
 		dirname  = "test_deadcode"
@@ -262,14 +262,14 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/spf13/cobra"
+	"github.com/naja-go/naja"
 )
 
-var rootCmd = &cobra.Command{
+var rootCmd = &naja.Command{
 	Version: "1.0",
 	Use:     "example_program",
 	Short:   "example_program - test fixture to check that deadcode elimination is allowed",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(cmd *naja.Command, args []string) {
 		fmt.Println("hello world")
 	},
 	Aliases: []string{"alias1", "alias2"},

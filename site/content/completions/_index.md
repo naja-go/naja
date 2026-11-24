@@ -1,13 +1,13 @@
 # Generating shell completions
 
-Cobra can generate shell completions for multiple shells.
+Naja can generate shell completions for multiple shells.
 The currently supported shells are:
 - Bash
 - Zsh
 - fish
 - PowerShell
 
-Cobra will automatically provide your program with a fully functional `completion` command,
+Naja will automatically provide your program with a fully functional `completion` command,
 similarly to how it provides the `help` command. If there are no other subcommands, the
 default `completion` command will be hidden, but still functional.
 
@@ -17,18 +17,11 @@ If you do not wish to use the default `completion` command, you can choose to
 provide your own, which will take precedence over the default one. (This also provides
 backwards-compatibility with programs that already have their own `completion` command.)
 
-If you are using the `cobra-cli` generator,
-which can be found at [spf13/cobra-cli](https://github.com/spf13/cobra-cli),
-you can create a completion command by running
-
-```bash
-cobra-cli add completion
-```
-and then modifying the generated `cmd/completion.go` file to look something like this
-(writing the shell script to stdout allows the most flexible use):
+Define a completion command in `cmd/completion.go` and add it to your root command.
+Write the generated script to stdout so users can load or save it as needed:
 
 ```go
-var completionCmd = &cobra.Command{
+var completionCmd = &naja.Command{
 	Use:   "completion [bash|zsh|fish|powershell]",
 	Short: "Generate completion script",
 	Long: fmt.Sprintf(`To load completions:
@@ -69,11 +62,11 @@ PowerShell:
   # To load completions for every new session, run:
   PS> %[1]s completion powershell > %[1]s.ps1
   # and source this file from your PowerShell profile.
-`,cmd.Root().Name()),
+`, rootCmd.Name()),
 	DisableFlagsInUseLine: true,
 	ValidArgs:             []string{"bash", "zsh", "fish", "powershell"},
-	Args:                  cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
-	Run: func(cmd *cobra.Command, args []string) {
+	Args:                  naja.MatchAll(naja.ExactArgs(1), naja.OnlyValidArgs),
+	Run: func(cmd *naja.Command, args []string) {
 		switch args[0] {
 		case "bash":
 			cmd.Root().GenBashCompletion(os.Stdout)
@@ -88,7 +81,7 @@ PowerShell:
 }
 ```
 
-**Note:** The cobra generator may include messages printed to stdout, for example, if the config file is loaded; this will break the auto-completion script so must be removed.
+**Note:** Keep stdout clear of other messages when generating a completion script. For example, send configuration diagnostics to stderr.
 
 ## Adapting the default completion command
 
@@ -130,13 +123,13 @@ Some simplified code from `kubectl get` looks like:
 ```go
 validArgs = []string{ "pod", "node", "service", "replicationcontroller" }
 
-cmd := &cobra.Command{
+cmd := &naja.Command{
 	Use:     "get [(-o|--output=)json|yaml|template|...] (RESOURCE [NAME] | RESOURCE/NAME ...)",
 	Short:   "Display one or many resources",
 	Long:    get_long,
 	Example: get_example,
-	Run: func(cmd *cobra.Command, args []string) {
-		cobra.CheckErr(RunGet(f, out, cmd, args))
+	Run: func(cmd *naja.Command, args []string) {
+		naja.CheckErr(RunGet(f, out, cmd, args))
 	},
 	ValidArgs: validArgs,
 }
@@ -156,7 +149,7 @@ If your nouns have aliases, you can define them alongside `ValidArgs` using `Arg
 ```go
 argAliases = []string { "pods", "nodes", "services", "svc", "replicationcontrollers", "rc" }
 
-cmd := &cobra.Command{
+cmd := &naja.Command{
     ...
 	ValidArgs:  validArgs,
 	ArgAliases: argAliases
@@ -167,22 +160,22 @@ The aliases are shown to the user on tab completion only if no completions were 
 
 ### Dynamic completion of nouns
 
-In some cases it is not possible to provide a list of completions in advance.  Instead, the list of completions must be determined at execution-time. In a similar fashion as for static completions, you can use the `ValidArgsFunction` field to provide a Go function that Cobra will execute when it needs the list of completion choices for the nouns of a command.  Note that either `ValidArgs` or `ValidArgsFunction` can be used for a single cobra command, but not both.
+In some cases it is not possible to provide a list of completions in advance.  Instead, the list of completions must be determined at execution-time. In a similar fashion as for static completions, you can use the `ValidArgsFunction` field to provide a Go function that Cobra will execute when it needs the list of completion choices for the nouns of a command.  Note that either `ValidArgs` or `ValidArgsFunction` can be used for a single Naja command, but not both.
 Simplified code from `helm status` looks like:
 
 ```go
-cmd := &cobra.Command{
+cmd := &naja.Command{
 	Use:   "status RELEASE_NAME",
 	Short: "Display the status of the named release",
 	Long:  status_long,
-	RunE: func(cmd *cobra.Command, args []string) {
+	Run: func(cmd *naja.Command, args []string) {
 		RunGet(args[0])
 	},
-	ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]cobra.Completion, cobra.ShellCompDirective) {
+	ValidArgsFunction: func(cmd *naja.Command, args []string, toComplete string) ([]naja.Completion, naja.ShellCompDirective) {
 		if len(args) != 0 {
-			return nil, cobra.ShellCompDirectiveNoFileComp
+			return nil, naja.ShellCompDirectiveNoFileComp
 		}
-		return getReleasesFromCluster(toComplete), cobra.ShellCompDirectiveNoFileComp
+		return getReleasesFromCluster(toComplete), naja.ShellCompDirectiveNoFileComp
 	},
 }
 ```
@@ -193,7 +186,7 @@ Notice we put the `ValidArgsFunction` on the `status` sub-command. Let's assume 
 $ helm status [tab][tab]
 harbor notary rook thanos
 ```
-You may have noticed the use of `cobra.ShellCompDirective`.  These directives are bit fields allowing to control some shell completion behaviors for your particular completion.  You can combine them with the bit-or operator such as `cobra.ShellCompDirectiveNoSpace | cobra.ShellCompDirectiveNoFileComp`
+Values of type `naja.ShellCompDirective` are bit flags that control shell completion behavior. You can combine them with the bitwise OR operator: `naja.ShellCompDirectiveNoSpace | naja.ShellCompDirectiveNoFileComp`.
 ```go
 // Indicates that the shell will perform its default behavior after completions
 // have been provided (this implies none of the other directives).
@@ -212,7 +205,7 @@ ShellCompDirectiveNoFileComp
 
 // Indicates that the returned completions should be used as file extension filters.
 // For example, to complete only files of the form *.json or *.yaml:
-//    return []cobra.Completion{"yaml", "json"}, cobra.ShellCompDirectiveFilterFileExt
+//    return []naja.Completion{"yaml", "json"}, naja.ShellCompDirectiveFilterFileExt
 // For flags, using MarkFlagFilename() and MarkPersistentFlagFilename()
 // is a shortcut to using this directive explicitly.
 //
@@ -220,13 +213,13 @@ ShellCompDirectiveFilterFileExt
 
 // Indicates that only directory names should be provided in file completion.
 // For example:
-//    return nil, cobra.ShellCompDirectiveFilterDirs
+//    return nil, naja.ShellCompDirectiveFilterDirs
 // For flags, using MarkFlagDirname() is a shortcut to using this directive explicitly.
 //
 // To request directory names within another directory, the returned completions
 // should specify a single directory name within which to search. For example,
 // to complete directories within "themes/":
-//    return []cobra.Completion{"themes"}, cobra.ShellCompDirectiveFilterDirs
+//    return []naja.Completion{"themes"}, naja.ShellCompDirectiveFilterDirs
 //
 ShellCompDirectiveFilterDirs
 
@@ -260,15 +253,15 @@ Calling the `__complete` command directly allows you to run the Go debugger to t
 ```go
 // Prints to the completion script debug file (if BASH_COMP_DEBUG_FILE
 // is set to a file path) and optionally prints to stderr.
-cobra.CompDebug(msg string, printToStdErr bool)
-cobra.CompDebugln(msg string, printToStdErr bool)
+naja.CompDebug(msg string, printToStdErr bool)
+naja.CompDebugln(msg string, printToStdErr bool)
 
 // Prints to the completion script debug file (if BASH_COMP_DEBUG_FILE
 // is set to a file path) and to stderr.
-cobra.CompError(msg string)
-cobra.CompErrorln(msg string)
+naja.CompError(msg string)
+naja.CompErrorln(msg string)
 ```
-***Important:*** You should **not** leave traces that print directly to stdout in your completion code as they will be interpreted as completion choices by the completion script.  Instead, use the cobra-provided debugging traces functions mentioned above.
+***Important:*** You should **not** leave traces that print directly to stdout in your completion code as they will be interpreted as completion choices by the completion script.  Instead, use the Naja debugging functions listed above.
 
 ## Completions for flags
 
@@ -294,8 +287,8 @@ As for nouns, Cobra provides a way of defining dynamic completion of flags.  To 
 
 ```go
 flagName := "output"
-cmd.RegisterFlagCompletionFunc(flagName, func(cmd *cobra.Command, args []string, toComplete string) ([]cobra.Completion, cobra.ShellCompDirective) {
-	return []cobra.Completion{"json", "table", "yaml"}, cobra.ShellCompDirectiveDefault
+cmd.RegisterFlagCompletionFunc(flagName, func(cmd *naja.Command, args []string, toComplete string) ([]naja.Completion, naja.ShellCompDirective) {
+	return []naja.Completion{"json", "table", "yaml"}, naja.ShellCompDirectiveDefault
 })
 ```
 Notice that calling `RegisterFlagCompletionFunc()` is done through the `command` with which the flag is associated.  In our example this dynamic completion will give results like so:
@@ -315,7 +308,7 @@ completion function for that command/flag.
 For example:
 
 ```go
-cmd.RegisterFlagCompletionFunc("flag-name", cobra.NoFileCompletions)
+cmd.RegisterFlagCompletionFunc("flag-name", naja.NoFileCompletions)
 ```
 
 If you find that there are more situations where file completion should be turned off than
@@ -323,14 +316,14 @@ when it is applicable, you can recursively change the default `ShellCompDirectiv
 and its subcommands to `ShellCompDirectiveNoFileComp`:
 
 ```go
-cmd.CompletionOptions.SetDefaultShellCompDirective(ShellCompDirectiveNoFileComp)
+cmd.CompletionOptions.SetDefaultShellCompDirective(naja.ShellCompDirectiveNoFileComp)
 ```
 
 If doing so, keep in mind that you should instead register a completion function for leaf commands or
 flags where file completion is applicable. For example:
 
 ```go
-cmd.RegisterFlagCompletionFunc("flag-name", cobra.FixedCompletions(nil, ShellCompDirectiveDefault))
+cmd.RegisterFlagCompletionFunc("flag-name", naja.FixedCompletions(nil, naja.ShellCompDirectiveDefault))
 ```
 
 To change the default directive for the entire program, set the DefaultShellCompDirective on the root command.
@@ -346,7 +339,7 @@ yaml
 :4
 Completion ended with directive: ShellCompDirectiveNoFileComp # This is on stderr
 ```
-***Important:*** You should **not** leave traces that print to stdout in your completion code as they will be interpreted as completion choices by the completion script.  Instead, use the cobra-provided debugging traces functions mentioned further above.
+***Important:*** You should **not** leave traces that print to stdout in your completion code as they will be interpreted as completion choices by the completion script.  Instead, use the Naja debugging functions listed above.
 
 ### Specify valid filename extensions for flags that take a filename
 
@@ -358,8 +351,9 @@ cmd.MarkFlagFilename(flagName, "yaml", "json")
 or
 ```go
 flagName := "output"
-cmd.RegisterFlagCompletionFunc(flagName, func(cmd *cobra.Command, args []string, toComplete string) ([]cobra.Completion, cobra.ShellCompDirective) {
-	return []cobra.Completion{"yaml", "json"}, cobra.ShellCompDirectiveFilterFileExt})
+cmd.RegisterFlagCompletionFunc(flagName, func(cmd *naja.Command, args []string, toComplete string) ([]naja.Completion, naja.ShellCompDirective) {
+	return []naja.Completion{"yaml", "json"}, naja.ShellCompDirectiveFilterFileExt
+})
 ```
 
 ### Limit flag completions to directory names
@@ -372,15 +366,15 @@ cmd.MarkFlagDirname(flagName)
 or
 ```go
 flagName := "output"
-cmd.RegisterFlagCompletionFunc(flagName, func(cmd *cobra.Command, args []string, toComplete string) ([]cobra.Completion, cobra.ShellCompDirective) {
-	return nil, cobra.ShellCompDirectiveFilterDirs
+cmd.RegisterFlagCompletionFunc(flagName, func(cmd *naja.Command, args []string, toComplete string) ([]naja.Completion, naja.ShellCompDirective) {
+	return nil, naja.ShellCompDirectiveFilterDirs
 })
 ```
 To limit completions of flag values to directory names *within another directory* you can use a combination of `RegisterFlagCompletionFunc()` and `ShellCompDirectiveFilterDirs` like so:
 ```go
 flagName := "output"
-cmd.RegisterFlagCompletionFunc(flagName, func(cmd *cobra.Command, args []string, toComplete string) ([]cobra.Completion, cobra.ShellCompDirective) {
-	return []cobra.Completion{"themes"}, cobra.ShellCompDirectiveFilterDirs
+cmd.RegisterFlagCompletionFunc(flagName, func(cmd *naja.Command, args []string, toComplete string) ([]naja.Completion, naja.ShellCompDirective) {
+	return []naja.Completion{"themes"}, naja.ShellCompDirectiveFilterDirs
 })
 ```
 ### Descriptions for completions
@@ -403,19 +397,19 @@ search  (search for a keyword in charts)  show  (show information of a chart)  s
 
 Cobra allows you to add descriptions to your own completions.  Simply add the description text after each completion, following a `\t` separator. Cobra provides the helper function `CompletionWithDesc(string, string)` to create a completion with a description. This technique applies to completions returned by `ValidArgs`, `ValidArgsFunction` and `RegisterFlagCompletionFunc()`.  For example:
 ```go
-ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]cobra.Completion, cobra.ShellCompDirective) {
-	return []cobra.Completion{
-		cobra.CompletionWithDesc("harbor", "An image registry"),
-		cobra.CompletionWithDesc("thanos", "Long-term metrics")
-		}, cobra.ShellCompDirectiveNoFileComp
-}}
+ValidArgsFunction: func(cmd *naja.Command, args []string, toComplete string) ([]naja.Completion, naja.ShellCompDirective) {
+	return []naja.Completion{
+		naja.CompletionWithDesc("harbor", "An image registry"),
+		naja.CompletionWithDesc("thanos", "Long-term metrics"),
+	}, naja.ShellCompDirectiveNoFileComp
+},
 ```
 or
 ```go
-ValidArgs: []cobra.Completion{
-	cobra.CompletionWithDesc("bash", "Completions for bash"),
-	cobra.CompletionWithDesc("zsh", "Completions for zsh")
-	}
+ValidArgs: []naja.Completion{
+	naja.CompletionWithDesc("bash", "Completions for bash"),
+	naja.CompletionWithDesc("zsh", "Completions for zsh"),
+},
 ```
 
 If you don't want to show descriptions in the completions, you can add `--no-descriptions` to the default `completion` command to disable them, like:
@@ -491,7 +485,7 @@ search  show  status
 **Note**: Cobra's default `completion` command uses bash completion V2.  If for some reason you need to use bash completion V1, you will need to implement your own `completion` command.
 ## Zsh completions
 
-Cobra supports native zsh completion generated from the root `cobra.Command`.
+Naja supports native zsh completion generated from the root `naja.Command`.
 The generated completion script should be put somewhere in your `$fpath` and be named
 `_<yourProgram>`.  You will need to start a new shell for the completions to become available.
 
@@ -526,7 +520,7 @@ Please refer to [Zsh Completions](zsh.md) for details.
 
 ## fish completions
 
-Cobra supports native fish completions generated from the root `cobra.Command`.  You can use the `command.GenFishCompletion()` or `command.GenFishCompletionFile()` functions. You must provide these functions with a parameter indicating if the completions should be annotated with a description; Cobra will provide the description automatically based on usage information.  You can choose to make this option configurable by your users.
+Naja supports native fish completions generated from the root `naja.Command`. You can use the `command.GenFishCompletion()` or `command.GenFishCompletionFile()` functions. You must provide these functions with a parameter indicating if the completions should be annotated with a description; Naja will provide the description automatically based on usage information.  You can choose to make this option configurable by your users.
 ```
 # With descriptions
 $ helm s[tab]
@@ -556,7 +550,7 @@ search  show  status
 
 ## PowerShell completions
 
-Cobra supports native PowerShell completions generated from the root `cobra.Command`. You can use the `command.GenPowerShellCompletion()` or `command.GenPowerShellCompletionFile()` functions. To include descriptions use `command.GenPowerShellCompletionWithDesc()` and `command.GenPowerShellCompletionFileWithDesc()`. Cobra will provide the description automatically based on usage information. You can choose to make this option configurable by your users.
+Naja supports native PowerShell completions generated from the root `naja.Command`. You can use the `command.GenPowerShellCompletion()` or `command.GenPowerShellCompletionFile()` functions. To include descriptions use `command.GenPowerShellCompletionWithDesc()` and `command.GenPowerShellCompletionFileWithDesc()`. Cobra will provide the description automatically based on usage information. You can choose to make this option configurable by your users.
 
 The script is designed to support all three PowerShell completion modes:
 

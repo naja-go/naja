@@ -1,7 +1,6 @@
 # User Guide
 
-While you are welcome to provide your own organization, typically a Cobra-based
-application will follow the following organizational structure:
+A Naja application typically follows this directory structure:
 
 ```console
 ▾ appName/
@@ -13,7 +12,7 @@ application will follow the following organizational structure:
   main.go
 ```
 
-In a Cobra app, typically the main.go file is very bare. It serves one purpose: initializing Cobra.
+In a Naja app, `main.go` typically just calls the root command.
 
 ```go
 package main
@@ -25,32 +24,24 @@ func main() {
 }
 ```
 
-## Using the Cobra Generator
+## Using the Naja library
 
-Cobra-CLI is its own program that will create your application and add any commands you want.
-It's the easiest way to incorporate Cobra into your application.
-
-For complete details on using the Cobra generator, please refer to [The Cobra-CLI Generator README](https://github.com/spf13/cobra-cli/blob/main/README.md)
-
-## Using the Cobra Library
-
-To manually implement Cobra you need to create a bare main.go file and a rootCmd file.
-You will optionally provide additional commands as you see fit.
+Create a `main.go` file and a root command. Add subcommands as needed.
 
 ### Create rootCmd
 
-Cobra doesn't require any special constructors. Simply create your commands.
+Naja doesn't require any special constructors. Declare commands as `naja.Command` values.
 
 Ideally you place this in app/cmd/root.go:
 
 ```go
-var rootCmd = &cobra.Command{
+var rootCmd = &naja.Command{
   Use:   "hugo",
   Short: "Hugo is a very fast static site generator",
   Long: `A Fast and Flexible Static Site Generator built with
                 love by spf13 and friends in Go.
                 Complete documentation is available at https://gohugo.io/documentation/`,
-  Run: func(cmd *cobra.Command, args []string) {
+  Run: func(cmd *naja.Command, args []string) {
     // Do Stuff Here
   },
 }
@@ -74,7 +65,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/spf13/cobra"
+	"github.com/naja-go/naja"
 	"github.com/spf13/viper"
 )
 
@@ -83,7 +74,7 @@ var (
 	cfgFile     string
 	userLicense string
 
-	rootCmd = &cobra.Command{
+	rootCmd = &naja.Command{
 		Use:   "cobra-cli",
 		Short: "A generator for Cobra based Applications",
 		Long: `Cobra is a CLI library for Go that empowers applications.
@@ -98,7 +89,7 @@ func Execute() error {
 }
 
 func init() {
-	cobra.OnInitialize(initConfig)
+	naja.OnInitialize(initConfig)
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.cobra.yaml)")
 	rootCmd.PersistentFlags().StringP("author", "a", "YOUR NAME", "author name for copyright attribution")
@@ -120,7 +111,7 @@ func initConfig() {
 	} else {
 		// Find home directory.
 		home, err := os.UserHomeDir()
-		cobra.CheckErr(err)
+		naja.CheckErr(err)
 
 		// Search config in home directory with name ".cobra" (without extension).
 		viper.AddConfigPath(home)
@@ -141,7 +132,7 @@ func initConfig() {
 With the root command you need to have your main function execute it.
 Execute should be run on the root for clarity, though it can be called on any command.
 
-In a Cobra app, typically the main.go file is very bare. It serves one purpose: to initialize Cobra.
+The `main.go` file can be as simple as:
 
 ```go
 package main
@@ -167,18 +158,18 @@ package cmd
 import (
   "fmt"
 
-  "github.com/spf13/cobra"
+  "github.com/naja-go/naja"
 )
 
 func init() {
   rootCmd.AddCommand(versionCmd)
 }
 
-var versionCmd = &cobra.Command{
+var versionCmd = &naja.Command{
   Use:   "version",
   Short: "Print the version number of Hugo",
   Long:  `All software has versions. This is Hugo's`,
-  Run: func(cmd *cobra.Command, args []string) {
+  Run: func(cmd *naja.Command, args []string) {
     fmt.Println("Hugo Static Site Generator v0.9 -- HEAD")
   },
 }
@@ -225,17 +216,17 @@ package cmd
 import (
   "fmt"
 
-  "github.com/spf13/cobra"
+  "github.com/naja-go/naja"
 )
 
 func init() {
   rootCmd.AddCommand(tryCmd)
 }
 
-var tryCmd = &cobra.Command{
+var tryCmd = &naja.Command{
   Use:   "try",
   Short: "Try and possibly fail at something",
-  RunE: func(cmd *cobra.Command, args []string) error {
+  RunE: func(cmd *naja.Command, args []string) error {
     if err := someFunc(); err != nil {
 	return err
     }
@@ -288,7 +279,7 @@ parent commands are ignored. By enabling `Command.TraverseChildren`, Cobra will
 parse local flags on each command before executing the target command.
 
 ```go
-command := cobra.Command{
+command := naja.Command{
   Use: "print [OPTIONS] [COMMANDS]",
   TraverseChildren: true,
 }
@@ -390,7 +381,7 @@ Usage examples:
 
 Then in your command logic:
 ```go
-Run: func(cmd *cobra.Command, args []string) {
+Run: func(cmd *naja.Command, args []string) {
   switch verbose {
   case 0:
     // Default: no verbose output
@@ -457,24 +448,24 @@ args that are not in the `ValidArgs` field of `Command`, you can call `MatchAll`
 shown below:
 
 ```go
-var cmd = &cobra.Command{
+var cmd = &naja.Command{
   Short: "hello",
-  Args: cobra.MatchAll(cobra.ExactArgs(2), cobra.OnlyValidArgs),
-  Run: func(cmd *cobra.Command, args []string) {
+  Args: naja.MatchAll(naja.ExactArgs(2), naja.OnlyValidArgs),
+  Run: func(cmd *naja.Command, args []string) {
     fmt.Println("Hello, World!")
   },
 }
 ```
 
-It is possible to set any custom validator that satisfies `func(cmd *cobra.Command, args []string) error`.
+It is possible to set any custom validator that satisfies `func(cmd *naja.Command, args []string) error`.
 For example:
 
 ```go
-var cmd = &cobra.Command{
+var cmd = &naja.Command{
   Short: "hello",
-  Args: func(cmd *cobra.Command, args []string) error {
-    // Optionally run one of the validators provided by cobra
-    if err := cobra.MinimumNArgs(1)(cmd, args); err != nil {
+  Args: func(cmd *naja.Command, args []string) error {
+    // Optionally run one of the validators provided by Naja.
+    if err := naja.MinimumNArgs(1)(cmd, args); err != nil {
         return err
     }
     // Run the custom validation logic
@@ -483,7 +474,7 @@ var cmd = &cobra.Command{
     }
     return fmt.Errorf("invalid color specified: %s", args[0])
   },
-  Run: func(cmd *cobra.Command, args []string) {
+  Run: func(cmd *naja.Command, args []string) {
     fmt.Println("Hello, World!")
   },
 }
@@ -507,41 +498,41 @@ import (
   "fmt"
   "strings"
 
-  "github.com/spf13/cobra"
+  "github.com/naja-go/naja"
 )
 
 func main() {
   var echoTimes int
 
-  var cmdPrint = &cobra.Command{
+  var cmdPrint = &naja.Command{
     Use:   "print [string to print]",
     Short: "Print anything to the screen",
     Long: `print is for printing anything back to the screen.
 For many years people have printed back to the screen.`,
-    Args: cobra.MinimumNArgs(1),
-    Run: func(cmd *cobra.Command, args []string) {
+    Args: naja.MinimumNArgs(1),
+    Run: func(cmd *naja.Command, args []string) {
       fmt.Println("Print: " + strings.Join(args, " "))
     },
   }
 
-  var cmdEcho = &cobra.Command{
+  var cmdEcho = &naja.Command{
     Use:   "echo [string to echo]",
     Short: "Echo anything to the screen",
     Long: `echo is for echoing anything back.
 Echo works a lot like print, except it has a child command.`,
-    Args: cobra.MinimumNArgs(1),
-    Run: func(cmd *cobra.Command, args []string) {
+    Args: naja.MinimumNArgs(1),
+    Run: func(cmd *naja.Command, args []string) {
       fmt.Println("Echo: " + strings.Join(args, " "))
     },
   }
 
-  var cmdTimes = &cobra.Command{
+  var cmdTimes = &naja.Command{
     Use:   "times [string to echo]",
     Short: "Echo anything to the screen more times",
     Long: `echo things multiple times back to the user by providing
 a count and a string.`,
-    Args: cobra.MinimumNArgs(1),
-    Run: func(cmd *cobra.Command, args []string) {
+    Args: naja.MinimumNArgs(1),
+    Run: func(cmd *naja.Command, args []string) {
       for i := 0; i < echoTimes; i++ {
         fmt.Println("Echo: " + strings.Join(args, " "))
       }
@@ -550,7 +541,7 @@ a count and a string.`,
 
   cmdTimes.Flags().IntVarP(&echoTimes, "times", "t", 1, "times to echo the input")
 
-  var rootCmd = &cobra.Command{Use: "app"}
+  var rootCmd = &naja.Command{Use: "app"}
   rootCmd.AddCommand(cmdPrint, cmdEcho)
   cmdEcho.AddCommand(cmdTimes)
   rootCmd.Execute()
@@ -703,44 +694,44 @@ package main
 import (
   "fmt"
 
-  "github.com/spf13/cobra"
+  "github.com/naja-go/naja"
 )
 
 func main() {
 
-  var rootCmd = &cobra.Command{
+  var rootCmd = &naja.Command{
     Use:   "root [sub]",
     Short: "My root command",
-    PersistentPreRun: func(cmd *cobra.Command, args []string) {
+    PersistentPreRun: func(cmd *naja.Command, args []string) {
       fmt.Printf("Inside rootCmd PersistentPreRun with args: %v\n", args)
     },
-    PreRun: func(cmd *cobra.Command, args []string) {
+    PreRun: func(cmd *naja.Command, args []string) {
       fmt.Printf("Inside rootCmd PreRun with args: %v\n", args)
     },
-    Run: func(cmd *cobra.Command, args []string) {
+    Run: func(cmd *naja.Command, args []string) {
       fmt.Printf("Inside rootCmd Run with args: %v\n", args)
     },
-    PostRun: func(cmd *cobra.Command, args []string) {
+    PostRun: func(cmd *naja.Command, args []string) {
       fmt.Printf("Inside rootCmd PostRun with args: %v\n", args)
     },
-    PersistentPostRun: func(cmd *cobra.Command, args []string) {
+    PersistentPostRun: func(cmd *naja.Command, args []string) {
       fmt.Printf("Inside rootCmd PersistentPostRun with args: %v\n", args)
     },
   }
 
-  var subCmd = &cobra.Command{
+  var subCmd = &naja.Command{
     Use:   "sub [no options!]",
     Short: "My subcommand",
-    PreRun: func(cmd *cobra.Command, args []string) {
+    PreRun: func(cmd *naja.Command, args []string) {
       fmt.Printf("Inside subCmd PreRun with args: %v\n", args)
     },
-    Run: func(cmd *cobra.Command, args []string) {
+    Run: func(cmd *naja.Command, args []string) {
       fmt.Printf("Inside subCmd Run with args: %v\n", args)
     },
-    PostRun: func(cmd *cobra.Command, args []string) {
+    PostRun: func(cmd *naja.Command, args []string) {
       fmt.Printf("Inside subCmd PostRun with args: %v\n", args)
     },
-    PersistentPostRun: func(cmd *cobra.Command, args []string) {
+    PersistentPostRun: func(cmd *naja.Command, args []string) {
       fmt.Printf("Inside subCmd PersistentPostRun with args: %v\n", args)
     },
   }
@@ -837,7 +828,7 @@ Read more about it in [Active Help](active_help.md).
 When creating a plugin for tools like *kubectl*, the executable is named
 `kubectl-myplugin`, but it is used as `kubectl myplugin`. To fix help
 messages and completions, annotate the root command with the
-`cobra.CommandDisplayNameAnnotation` annotation.
+`naja.CommandDisplayNameAnnotation` annotation.
 
 ### Example kubectl plugin
 
@@ -847,19 +838,19 @@ package main
 import (
 	"fmt"
 
-	"github.com/spf13/cobra"
+	"github.com/naja-go/naja"
 )
 
 func main() {
-	rootCmd := &cobra.Command{
+	rootCmd := &naja.Command{
 		Use: "kubectl-myplugin",
 		Annotations: map[string]string{
-			cobra.CommandDisplayNameAnnotation: "kubectl myplugin",
+			naja.CommandDisplayNameAnnotation: "kubectl myplugin",
 		},
 	}
-	subCmd := &cobra.Command{
+	subCmd := &naja.Command{
 		Use: "subcmd",
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(cmd *naja.Command, args []string) {
 			fmt.Println("kubectl myplugin subcmd")
 		},
 	}

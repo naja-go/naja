@@ -1,6 +1,6 @@
 # Active Help
 
-Active Help is a framework provided by Cobra which allows a program to define messages (hints, warnings, etc) that will be printed during program usage.  It aims to make it easier for your users to learn how to use your program.  If configured by the program, Active Help is printed when the user triggers shell completion.
+Active Help is a framework provided by Naja which allows a program to define messages (hints, warnings, etc) that will be printed during program usage.  It aims to make it easier for your users to learn how to use your program.  If configured by the program, Active Help is printed when the user triggers shell completion.
 
 For example,
 
@@ -27,30 +27,30 @@ Active Help is currently only supported for the following shells:
 
 As Active Help uses the shell completion system, the implementation of Active Help messages is done by enhancing custom dynamic completions.  If you are not familiar with dynamic completions, please refer to [Shell Completions](completions/_index.md).
 
-Adding Active Help is done through the use of the `cobra.AppendActiveHelp(...)` function, where the program repeatedly adds Active Help messages to the list of completions.  Keep reading for details.
+Adding Active Help is done through the use of the `naja.AppendActiveHelp(...)` function, where the program repeatedly adds Active Help messages to the list of completions.  Keep reading for details.
 
 ### Active Help for nouns
 
-Adding Active Help when completing a noun is done within the `ValidArgsFunction(...)` of a command.  Please notice the use of `cobra.AppendActiveHelp(...)` in the following example:
+Adding Active Help when completing a noun is done within the `ValidArgsFunction(...)` of a command.  Notice the calls to `naja.AppendActiveHelp(...)` in the following example:
 
 ```go
-cmd := &cobra.Command{
+cmd := &naja.Command{
 	Use:   "add [NAME] [URL]",
 	Short: "add a chart repository",
-	Args:  require.ExactArgs(2),
-	RunE: func(cmd *cobra.Command, args []string) error {
+	Args:  naja.ExactArgs(2),
+	RunE: func(cmd *naja.Command, args []string) error {
 		return addRepo(args)
 	},
-	ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]cobra.Completion, cobra.ShellCompDirective) {
-		var comps []cobra.Completion
+	ValidArgsFunction: func(cmd *naja.Command, args []string, toComplete string) ([]naja.Completion, naja.ShellCompDirective) {
+		var comps []naja.Completion
 		if len(args) == 0 {
-			comps = cobra.AppendActiveHelp(comps, "You must choose a name for the repo you are adding")
+			comps = naja.AppendActiveHelp(comps, "You must choose a name for the repo you are adding")
 		} else if len(args) == 1 {
-			comps = cobra.AppendActiveHelp(comps, "You must specify the URL for the repo you are adding")
+			comps = naja.AppendActiveHelp(comps, "You must specify the URL for the repo you are adding")
 		} else {
-			comps = cobra.AppendActiveHelp(comps, "This command does not take any more arguments")
+			comps = naja.AppendActiveHelp(comps, "This command does not take any more arguments")
 		}
-		return comps, cobra.ShellCompDirectiveNoFileComp
+		return comps, naja.ShellCompDirectiveNoFileComp
 	},
 }
 ```
@@ -75,12 +75,12 @@ This command does not take any more arguments
 Providing Active Help for flags is done in the same fashion as for nouns, but using the completion function registered for the flag.  For example:
 
 ```go
-_ = cmd.RegisterFlagCompletionFunc("version", func(cmd *cobra.Command, args []string, toComplete string) ([]cobra.Completion, cobra.ShellCompDirective) {
-		if len(args) != 2 {
-			return cobra.AppendActiveHelp(nil, "You must first specify the chart to install before the --version flag can be completed"), cobra.ShellCompDirectiveNoFileComp
-		}
-		return compVersionFlag(args[1], toComplete)
-	})
+_ = cmd.RegisterFlagCompletionFunc("version", func(cmd *naja.Command, args []string, toComplete string) ([]naja.Completion, naja.ShellCompDirective) {
+	if len(args) != 2 {
+		return naja.AppendActiveHelp(nil, "You must first specify the chart to install before the --version flag can be completed"), naja.ShellCompDirectiveNoFileComp
+	}
+	return compVersionFlag(args[1], toComplete)
+})
 ```
 The example above prints an Active Help message when not enough information was given by the user to complete the `--version` flag.
 
@@ -106,49 +106,49 @@ For example, say `helm` has chosen to support three levels for Active Help: `on`
 would set the desired behavior to `local` by doing `export HELM_ACTIVE_HELP=local` in their shell.
 
 For simplicity, when in `cmd.ValidArgsFunction(...)` or a flag's completion function, the program should read the
-Active Help configuration using the `cobra.GetActiveHelpConfig(cmd)` function and select what Active Help messages
+Active Help configuration using the `naja.GetActiveHelpConfig(cmd)` function and select what Active Help messages
 should or should not be added (instead of reading the environment variable directly).
 
 For example:
 
 ```go
-ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]cobra.Completion, cobra.ShellCompDirective) {
-	activeHelpLevel := cobra.GetActiveHelpConfig(cmd)
+ValidArgsFunction: func(cmd *naja.Command, args []string, toComplete string) ([]naja.Completion, naja.ShellCompDirective) {
+	activeHelpLevel := naja.GetActiveHelpConfig(cmd)
 
-	var comps []cobra.Completion
+	var comps []naja.Completion
 	if len(args) == 0 {
-		if activeHelpLevel != "off"  {
-			comps = cobra.AppendActiveHelp(comps, "You must choose a name for the repo you are adding")
+		if activeHelpLevel != "off" {
+			comps = naja.AppendActiveHelp(comps, "You must choose a name for the repo you are adding")
 		}
 	} else if len(args) == 1 {
 		if activeHelpLevel != "off" {
-			comps = cobra.AppendActiveHelp(comps, "You must specify the URL for the repo you are adding")
+			comps = naja.AppendActiveHelp(comps, "You must specify the URL for the repo you are adding")
 		}
 	} else {
 		if activeHelpLevel == "local" {
-			comps = cobra.AppendActiveHelp(comps, "This command does not take any more arguments")
+			comps = naja.AppendActiveHelp(comps, "This command does not take any more arguments")
 		}
 	}
-	return comps, cobra.ShellCompDirectiveNoFileComp
+	return comps, naja.ShellCompDirectiveNoFileComp
 },
 ```
 
-**Note 1**: If the `<PROGRAM>_ACTIVE_HELP` environment variable is set to the string "0", Cobra will automatically disable all Active Help output (even if some output was specified by the program using the `cobra.AppendActiveHelp(...)` function).  Using "0" can simplify your code in situations where you want to blindly disable Active Help without having to call `cobra.GetActiveHelpConfig(cmd)` explicitly.
+**Note 1**: If `<PROGRAM>_ACTIVE_HELP` is set to `0`, Naja disables all Active Help output, including messages added with `naja.AppendActiveHelp(...)`.
 
-**Note 2**: If a user wants to disable Active Help for every single program based on Cobra, she can set the environment variable `COBRA_ACTIVE_HELP` to "0".  In this case `cobra.GetActiveHelpConfig(cmd)` will return "0" no matter what the variable `<PROGRAM>_ACTIVE_HELP` is set to.
+**Note 2**: To disable Active Help globally, set `COBRA_ACTIVE_HELP` to `0`. Naja retains this environment variable for compatibility. When set to `0`, `naja.GetActiveHelpConfig(cmd)` returns `0` regardless of `<PROGRAM>_ACTIVE_HELP`.
 
-**Note 3**: If the user does not set `<PROGRAM>_ACTIVE_HELP` or `COBRA_ACTIVE_HELP` (which will be a common case), the default value for the Active Help configuration returned by `cobra.GetActiveHelpConfig(cmd)` will be the empty string. 
+**Note 3**: If neither variable is set, `naja.GetActiveHelpConfig(cmd)` returns an empty string.
 
-## Active Help with Cobra's default completion command
+## Active Help with Naja's default completion command
 
-Cobra provides a default `completion` command for programs that wish to use it.
+Naja provides a default `completion` command for programs that wish to use it.
 When using the default `completion` command, Active Help is configurable in the same
 fashion as described above using environment variables.  You may wish to document this in more
 details for your users.
 
 ## Debugging Active Help
 
-Debugging your Active Help code is done in the same way as debugging your dynamic completion code, which is with Cobra's hidden `__complete` command.  Please refer to [debugging shell completion](completions/_index.md#debugging) for details.
+Debugging your Active Help code is done in the same way as debugging your dynamic completion code, which is with Naja's hidden `__complete` command.  Please refer to [debugging shell completion](completions/_index.md#debugging) for details.
 
 When debugging with the `__complete` command, if you want to specify different Active Help configurations, you should use the active help environment variable.  That variable is named `<PROGRAM>_ACTIVE_HELP` where any non-ASCII-alphanumeric characters are replaced by an `_`.  For example, we can test deactivating some Active Help as shown below:
 

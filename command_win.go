@@ -14,7 +14,7 @@
 
 //go:build windows
 
-package cobra
+package naja
 
 import (
 	"fmt"

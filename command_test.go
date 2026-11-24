@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cobra
+package naja
 
 import (
 	"bytes"
@@ -2305,7 +2305,7 @@ func TestMergeCommandLineToFlags(t *testing.T) {
 }
 
 // TestUseDeprecatedFlags checks,
-// if cobra.Execute() prints a message, if a deprecated flag is used.
+// if Command.Execute prints a message when a deprecated flag is used.
 // Related to https://github.com/spf13/cobra/issues/463.
 func TestUseDeprecatedFlags(t *testing.T) {
 	c := &Command{Use: "c", Run: emptyRun}

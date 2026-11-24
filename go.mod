@@ -1,4 +1,4 @@
-module github.com/spf13/cobra
+module github.com/naja-go/naja
 
 go 1.27
 

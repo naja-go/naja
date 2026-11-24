@@ -1,4 +1,4 @@
-## Generating Zsh Completion For Your cobra.Command
+## Generating Zsh Completion For Your naja.Command
 
 Please refer to [Shell Completions](_index.md) for details.
 

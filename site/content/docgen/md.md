@@ -1,6 +1,6 @@
-# Generating Markdown Docs For Your Own cobra.Command
+# Generating Markdown Docs for a naja.Command
 
-Generating Markdown pages from a cobra command is incredibly easy. An example is as follows:
+Generate Markdown pages from a Naja command:
 
 ```go
 package main
@@ -8,12 +8,12 @@ package main
 import (
 	"log"
 
-	"github.com/spf13/cobra"
-	"github.com/spf13/cobra/doc"
+	"github.com/naja-go/naja"
+	"github.com/naja-go/naja/doc"
 )
 
 func main() {
-	cmd := &cobra.Command{
+	cmd := &naja.Command{
 		Use:   "test",
 		Short: "my test program",
 	}
@@ -28,32 +28,8 @@ That will get you a Markdown document `/tmp/test.md`
 
 ## Generate markdown docs for the entire command tree
 
-This program can actually generate docs for the kubectl command in the kubernetes project
-
-```go
-package main
-
-import (
-	"log"
-	"io"
-	"os"
-
-	"k8s.io/kubernetes/pkg/kubectl/cmd"
-	cmdutil "k8s.io/kubernetes/pkg/kubectl/cmd/util"
-
-	"github.com/spf13/cobra/doc"
-)
-
-func main() {
-	kubectl := cmd.NewKubectlCommand(cmdutil.NewFactory(nil), os.Stdin, io.Discard, io.Discard)
-	err := doc.GenMarkdownTree(kubectl, "./")
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-```
-
-This will generate a whole series of files, one for each command in the tree, in the directory specified (in this case "./")
+Call `doc.GenMarkdownTree` with the root command after adding its subcommands.
+It generates one file per command in the specified directory.
 
 ## Generate markdown docs for a single command
 

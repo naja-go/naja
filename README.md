@@ -78,12 +78,11 @@ port := cmd.Flags().NewP("port", "p", uint16(8080), "port to listen on")
 
 # Installing
 
-Naja requires Go 1.27 or newer. While the repositories are private, configure
-Git credentials with read access to both repositories and add
-`github.com/naja-go/*` to `GOPRIVATE`:
+Naja requires Go 1.27 or newer. While Naja is private, configure Git credentials
+with read access to `naja-go/naja` and add `github.com/naja-go/naja` to `GOPRIVATE`:
 
 ```sh
-GOPRIVATE='github.com/naja-go/*' go get github.com/naja-go/naja@main
+GOPRIVATE=github.com/naja-go/naja go get github.com/naja-go/naja@main
 ```
 
 Then import `github.com/naja-go/naja` as package `naja`. If you generate
@@ -99,13 +98,6 @@ such as `cobra.Command` to `naja.Command`. Use gpflag's `New`, `NewP`,
 across a command tree, register them on the root's `PersistentFlags()`;
 there is no package-global flag set. To ignore unknown flags, set
 `FParseErrWhitelist.UnknownFlagsHandling` to `gpflag.IgnoreUnknownFlag`.
-
-# Development
-
-Set `GOPRIVATE=github.com/naja-go/gpflag` when building from a local checkout.
-GitHub Actions needs the `GPFLAG_READ_TOKEN` repository secret with read-only
-Contents access to `naja-go/gpflag`; the default workflow token cannot read
-that private repository.
 
 # License
 

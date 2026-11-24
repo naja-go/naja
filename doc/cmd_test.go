@@ -24,21 +24,21 @@ import (
 func emptyRun(*naja.Command, []string) {}
 
 func init() {
-	rootCmd.PersistentFlags().StringP("rootflag", "r", "two", "")
-	rootCmd.PersistentFlags().StringP("strtwo", "t", "two", "help message for parent flag strtwo")
+	rootCmd.PersistentFlags().NewP("rootflag", "r", "two", "")
+	rootCmd.PersistentFlags().NewP("strtwo", "t", "two", "help message for parent flag strtwo")
 
-	echoCmd.PersistentFlags().StringP("strone", "s", "one", "help message for flag strone")
-	echoCmd.PersistentFlags().BoolP("persistentbool", "p", false, "help message for flag persistentbool")
-	echoCmd.Flags().IntP("intone", "i", 123, "help message for flag intone")
-	echoCmd.Flags().BoolP("boolone", "b", true, "help message for flag boolone")
+	echoCmd.PersistentFlags().NewP("strone", "s", "one", "help message for flag strone")
+	echoCmd.PersistentFlags().NewP("persistentbool", "p", false, "help message for flag persistentbool")
+	echoCmd.Flags().NewP("intone", "i", 123, "help message for flag intone")
+	echoCmd.Flags().NewP("boolone", "b", true, "help message for flag boolone")
 
-	timesCmd.PersistentFlags().StringP("strtwo", "t", "2", "help message for child flag strtwo")
-	timesCmd.Flags().IntP("inttwo", "j", 234, "help message for flag inttwo")
-	timesCmd.Flags().BoolP("booltwo", "c", false, "help message for flag booltwo")
+	timesCmd.PersistentFlags().NewP("strtwo", "t", "2", "help message for child flag strtwo")
+	timesCmd.Flags().NewP("inttwo", "j", 234, "help message for flag inttwo")
+	timesCmd.Flags().NewP("booltwo", "c", false, "help message for flag booltwo")
 
-	printCmd.PersistentFlags().StringP("strthree", "s", "three", "help message for flag strthree")
-	printCmd.Flags().IntP("intthree", "i", 345, "help message for flag intthree")
-	printCmd.Flags().BoolP("boolthree", "b", true, "help message for flag boolthree")
+	printCmd.PersistentFlags().NewP("strthree", "s", "three", "help message for flag strthree")
+	printCmd.Flags().NewP("intthree", "i", 345, "help message for flag intthree")
+	printCmd.Flags().NewP("boolthree", "b", true, "help message for flag boolthree")
 
 	echoCmd.AddCommand(timesCmd, echoSubCmd, deprecatedCmd)
 	rootCmd.AddCommand(printCmd, echoCmd, dummyCmd)

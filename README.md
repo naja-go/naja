@@ -24,7 +24,6 @@ Naja provides:
 * Automatically generated man pages for your application
 * Command aliases so you can change things without breaking them
 * The flexibility to define your own help, usage, etc.
-* Optional seamless integration with [viper](https://github.com/spf13/viper) for 12-factor apps
 
 # Concepts
 
@@ -69,16 +68,22 @@ and flags that are only available to that command.
 
 In the example above, 'port' is the flag.
 
-Flag functionality is provided by the [pflag
-library](https://github.com/spf13/pflag), a fork of the flag standard library
-which maintains the same interface while adding POSIX compliance.
+Flag parsing is provided by [gpflag](https://github.com/naja-go/gpflag), a
+hard fork of pflag with generic registration and retrieval. For example:
+
+```go
+port := cmd.Flags().NewP("port", "p", uint16(8080), "port to listen on")
+// After parsing, read *port or cmd.Flags().Get[uint16]("port").
+```
 
 # Installing
 
-Naja requires Go 1.27 or newer.
+Naja requires Go 1.27 or newer. While the repositories are private, configure
+Git credentials with read access to both repositories and add
+`github.com/naja-go/*` to `GOPRIVATE`:
 
 ```sh
-go get github.com/naja-go/naja@main
+GOPRIVATE='github.com/naja-go/*' go get github.com/naja-go/naja@main
 ```
 
 Then import `github.com/naja-go/naja` as package `naja`. If you generate
@@ -88,7 +93,19 @@ documentation, import `github.com/naja-go/naja/doc` as package `doc`.
 
 See the [user guide](site/content/user_guide.md) to build your first command.
 If you're migrating from Cobra, update both import paths and change references
-such as `cobra.Command` to `naja.Command`.
+such as `cobra.Command` to `naja.Command`. Use gpflag's `New`, `NewP`,
+`NewVar`, and `NewVarP` instead of type-specific flag constructors, and
+`Get[T]` or `TryGet[T]` instead of getters like `GetString`. To share flags
+across a command tree, register them on the root's `PersistentFlags()`;
+there is no package-global flag set. To ignore unknown flags, set
+`FParseErrWhitelist.UnknownFlagsHandling` to `gpflag.IgnoreUnknownFlag`.
+
+# Development
+
+Set `GOPRIVATE=github.com/naja-go/gpflag` when building from a local checkout.
+GitHub Actions needs the `GPFLAG_READ_TOKEN` repository secret with read-only
+Contents access to `naja-go/gpflag`; the default workflow token cannot read
+that private repository.
 
 # License
 

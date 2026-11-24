@@ -66,15 +66,11 @@ The `BashCompletionFunction` option is really only valid/useful on the root comm
 Similarly, for flags:
 
 ```go
-	annotation := make(map[string][]string)
-	annotation[naja.BashCompCustom] = []string{"__kubectl_get_namespaces"}
-
-	flag := &pflag.Flag{
-		Name:        "namespace",
-		Usage:       usage,
-		Annotations: annotation,
+	cmd.Flags().New("namespace", "", "namespace to query")
+	err := naja.MarkFlagCustom(cmd.Flags(), "namespace", "__kubectl_get_namespaces")
+	if err != nil {
+		return err
 	}
-	cmd.Flags().AddFlag(flag)
 ```
 
 In addition add the `__kubectl_get_namespaces` implementation in the `BashCompletionFunction`

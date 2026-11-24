@@ -62,11 +62,7 @@ For example cmd/root.go:
 package cmd
 
 import (
-	"fmt"
-	"os"
-
 	"github.com/naja-go/naja"
-	"github.com/spf13/viper"
 )
 
 var (
@@ -89,41 +85,12 @@ func Execute() error {
 }
 
 func init() {
-	naja.OnInitialize(initConfig)
+	flags := rootCmd.PersistentFlags()
+	flags.NewVar(&cfgFile, "config", "", "config file")
+	flags.NewP("author", "a", "YOUR NAME", "author name for copyright attribution")
+	flags.NewVarP(&userLicense, "license", "l", "", "name of license for the project")
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.cobra.yaml)")
-	rootCmd.PersistentFlags().StringP("author", "a", "YOUR NAME", "author name for copyright attribution")
-	rootCmd.PersistentFlags().StringVarP(&userLicense, "license", "l", "", "name of license for the project")
-	rootCmd.PersistentFlags().Bool("viper", true, "use Viper for configuration")
-	viper.BindPFlag("author", rootCmd.PersistentFlags().Lookup("author"))
-	viper.BindPFlag("useViper", rootCmd.PersistentFlags().Lookup("viper"))
-	viper.SetDefault("author", "NAME HERE <EMAIL ADDRESS>")
-	viper.SetDefault("license", "apache")
-
-	rootCmd.AddCommand(addCmd)
-	rootCmd.AddCommand(initCmd)
-}
-
-func initConfig() {
-	if cfgFile != "" {
-		// Use config file from the flag.
-		viper.SetConfigFile(cfgFile)
-	} else {
-		// Find home directory.
-		home, err := os.UserHomeDir()
-		naja.CheckErr(err)
-
-		// Search config in home directory with name ".cobra" (without extension).
-		viper.AddConfigPath(home)
-		viper.SetConfigType("yaml")
-		viper.SetConfigName(".cobra")
-	}
-
-	viper.AutomaticEnv()
-
-	if err := viper.ReadInConfig(); err == nil {
-		fmt.Println("Using config file:", viper.ConfigFileUsed())
-	}
+	rootCmd.AddCommand(addCmd, initCmd)
 }
 ```
 
@@ -239,20 +206,24 @@ The error can then be caught at the execute function call.
 
 ## Working with Flags
 
-Flags provide modifiers to control how the action command operates.
+Naja uses [gpflag](https://github.com/naja-go/gpflag) to parse flags. `New` and
+`NewP` infer the flag's type from its default and return a pointer to its value.
+`NewVar` and `NewVarP` bind an existing variable. The `P` methods take a
+one-letter shorthand. After parsing, use the bound value or look it up with
+`cmd.Flags().Get[T](name)` or `cmd.Flags().TryGet[T](name)`, where `T` is the
+flag's exact type.
 
 ### Assign flags to a command
 
-Since the flags are defined and used in different locations, we need to
-define a variable outside with the correct scope to assign the flag to
-work with.
+Use a variable in a scope shared by the flag declaration and command code if
+you want to bind it:
 
 ```go
 var Verbose bool
 var Source string
 ```
 
-There are two different approaches to assign a flag.
+Choose persistent or local flags depending on which commands should see them.
 
 ### Persistent Flags
 
@@ -261,7 +232,7 @@ command it's assigned to as well as every command under that command. For
 global flags, assign a flag as a persistent flag on the root.
 
 ```go
-rootCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "verbose output")
+rootCmd.PersistentFlags().NewVarP(&Verbose, "verbose", "v", false, "verbose output")
 ```
 
 ### Local Flags
@@ -269,7 +240,7 @@ rootCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "verbose out
 A flag can also be assigned locally, which will only apply to that specific command.
 
 ```go
-localCmd.Flags().StringVarP(&Source, "source", "s", "", "Source directory to read from")
+localCmd.Flags().NewVarP(&Source, "source", "s", "", "Source directory to read from")
 ```
 
 ### Local Flag on Parent Commands
@@ -285,24 +256,13 @@ command := naja.Command{
 }
 ```
 
-### Bind Flags with Config
+### Use flags with configuration
 
-You can also bind your flags with [viper](https://github.com/spf13/viper):
-
-```go
-var author string
-
-func init() {
-  rootCmd.PersistentFlags().StringVar(&author, "author", "YOUR NAME", "Author name for copyright attribution")
-  viper.BindPFlag("author", rootCmd.PersistentFlags().Lookup("author"))
-}
-```
-
-In this example, the persistent flag `author` is bound with `viper`.
-**Note**: the variable `author` will not be set to the value from config,
-when the `--author` flag is provided by user.
-
-More in [viper documentation](https://github.com/spf13/viper#working-with-flags).
+To give command-line values precedence over configuration, check
+`cmd.Flags().Changed(name)` after parsing. If the flag wasn't provided, use
+its configured value or keep the default. Viper's `BindPFlag` and `BindPFlags`
+accept pflag types, not gpflag types; use this explicit lookup or write an
+adapter for Viper's `BindFlagValue`.
 
 ### Required flags
 
@@ -310,14 +270,14 @@ Flags are optional by default. If instead you wish your command to report an err
 when a flag has not been set, mark it as required:
 
 ```go
-rootCmd.Flags().StringVarP(&Region, "region", "r", "", "AWS region (required)")
+rootCmd.Flags().NewVarP(&Region, "region", "r", "", "AWS region (required)")
 rootCmd.MarkFlagRequired("region")
 ```
 
 Or, for persistent flags:
 
 ```go
-rootCmd.PersistentFlags().StringVarP(&Region, "region", "r", "", "AWS region (required)")
+rootCmd.PersistentFlags().NewVarP(&Region, "region", "r", "", "AWS region (required)")
 rootCmd.MarkPersistentFlagRequired("region")
 ```
 
@@ -327,8 +287,8 @@ If you have different flags that must be provided together (e.g. if they provide
 Cobra can enforce that requirement:
 
 ```go
-rootCmd.Flags().StringVarP(&u, "username", "u", "", "Username (required if password is set)")
-rootCmd.Flags().StringVarP(&pw, "password", "p", "", "Password (required if username is set)")
+rootCmd.Flags().NewVarP(&u, "username", "u", "", "Username (required if password is set)")
+rootCmd.Flags().NewVarP(&pw, "password", "p", "", "Password (required if username is set)")
 rootCmd.MarkFlagsRequiredTogether("username", "password")
 ```
 
@@ -336,8 +296,8 @@ You can also prevent different flags from being provided together if they repres
 exclusive options such as specifying an output format as either `--json` or `--yaml` but never both:
 
 ```go
-rootCmd.Flags().BoolVar(&ofJson, "json", false, "Output in JSON")
-rootCmd.Flags().BoolVar(&ofYaml, "yaml", false, "Output in YAML")
+rootCmd.Flags().NewVar(&ofJson, "json", false, "Output in JSON")
+rootCmd.Flags().NewVar(&ofYaml, "yaml", false, "Output in YAML")
 rootCmd.MarkFlagsMutuallyExclusive("json", "yaml")
 ```
 
@@ -345,8 +305,8 @@ If you want to require at least one flag from a group to be present, you can use
 This can be combined with `MarkFlagsMutuallyExclusive` to enforce exactly one flag from a given group:
 
 ```go
-rootCmd.Flags().BoolVar(&ofJson, "json", false, "Output in JSON")
-rootCmd.Flags().BoolVar(&ofYaml, "yaml", false, "Output in YAML")
+rootCmd.Flags().NewVar(&ofJson, "json", false, "Output in JSON")
+rootCmd.Flags().NewVar(&ofYaml, "yaml", false, "Output in YAML")
 rootCmd.MarkFlagsOneRequired("json", "yaml")
 rootCmd.MarkFlagsMutuallyExclusive("json", "yaml")
 ```
@@ -366,11 +326,12 @@ Cobra supports two types of repeated flags, useful for implementing SSH-like ver
 For implementing verbose-style flags where repeated usage increases a counter (like SSH's `-v`, `-vv`, `-vvv`):
 
 ```go
-var verbose int
+import "github.com/naja-go/gpflag/pkg/types"
+
+var verbose types.Count
 
 func init() {
-  // CountVarP allows the flag to be repeated to increment the counter
-  rootCmd.PersistentFlags().CountVarP(&verbose, "verbose", "v", "verbose output (can be repeated: -v, -vv, -vvv)")
+  rootCmd.PersistentFlags().NewVarP(&verbose, "verbose", "v", 0, "verbosity (repeat -v to increase)")
 }
 ```
 
@@ -406,23 +367,26 @@ Run: func(cmd *naja.Command, args []string) {
 For collecting multiple values of the same flag:
 
 ```go
-var inputFiles []string
+import "github.com/naja-go/gpflag/pkg/types"
+
+var inputFiles types.StringArray
 
 func init() {
-  // StringArrayVarP allows multiple values: --input file1.txt --input file2.txt
-  rootCmd.Flags().StringArrayVarP(&inputFiles, "input", "i", []string{}, "input files (can be repeated)")
-
-  // Alternative: StringSliceVarP for comma-separated values
-  // rootCmd.Flags().StringSliceVarP(&inputFiles, "input", "i", []string{}, "input files (comma-separated or repeated)")
+  rootCmd.Flags().NewVarP(&inputFiles, "input", "i", nil, "input files (can be repeated)")
 }
+```
+
+For a flag that accepts comma-separated values as well as repeated occurrences,
+use `[]string` instead:
+
+```go
+inputFiles := rootCmd.Flags().NewP("input", "i", []string(nil), "input files (comma-separated or repeated)")
 ```
 
 Usage examples:
 - `myapp --input file1.txt --input file2.txt`
 - `myapp -i file1.txt -i file2.txt`
-- With StringSlice: `myapp --input file1.txt,file2.txt,file3.txt`
-
-**Note**: Both `CountVar` and array flags leverage the underlying [pflag](https://github.com/spf13/pflag) library's support for repeated flags.
+- With `[]string`: `myapp --input file1.txt,file2.txt,file3.txt`
 
 ## Positional and Custom Arguments
 
@@ -489,7 +453,7 @@ by not providing a 'Run' for the 'rootCmd'.
 
 We have only defined one flag for a single command.
 
-More documentation about flags is available at https://github.com/spf13/pflag.
+See the [gpflag documentation](https://github.com/naja-go/gpflag) for supported flag types.
 
 ```go
 package main
@@ -539,7 +503,7 @@ a count and a string.`,
     },
   }
 
-  cmdTimes.Flags().IntVarP(&echoTimes, "times", "t", 1, "times to echo the input")
+  cmdTimes.Flags().NewVarP(&echoTimes, "times", "t", 1, "times to echo the input")
 
   var rootCmd = &naja.Command{Use: "app"}
   rootCmd.AddCommand(cmdPrint, cmdEcho)
@@ -580,11 +544,10 @@ Available Commands:
   init        Initialize a Cobra Application
 
 Flags:
-  -a, --author string    author name for copyright attribution (default "YOUR NAME")
-      --config string    config file (default is $HOME/.cobra.yaml)
-  -h, --help             help for cobra-cli
-  -l, --license string   name of license for the project
-      --viper            use Viper for configuration
+  -a, --author string      author name for copyright attribution (default "YOUR NAME")
+      --config string      config file
+  -h, --help[=true|false]   help for cobra-cli
+  -l, --license string     name of license for the project
 
 Use "cobra-cli [command] --help" for more information about a command.
 ```
@@ -638,13 +601,12 @@ Available Commands:
   init        Initialize a Cobra Application
 
 Flags:
-  -a, --author string    author name for copyright attribution (default "YOUR NAME")
-      --config string    config file (default is $HOME/.cobra.yaml)
-  -h, --help             help for cobra-cli
-  -l, --license string   name of license for the project
-      --viper            use Viper for configuration
+  -a, --author string      author name for copyright attribution (default "YOUR NAME")
+      --config string      config file
+  -h, --help[=true|false]   help for cobra-cli
+  -l, --license string     name of license for the project
 
-Use "cobra [command] --help" for more information about a command.
+Use "cobra-cli [command] --help" for more information about a command.
 ```
 
 ### Defining your own usage
@@ -872,7 +834,7 @@ Available Commands:
   subcmd
 
 Flags:
-  -h, --help   help for kubectl myplugin
+  -h, --help[=true|false]   help for kubectl myplugin
 
 Use "kubectl myplugin [command] --help" for more information about a command.
 ```

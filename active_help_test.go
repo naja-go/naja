@@ -234,7 +234,7 @@ func TestActiveHelpForFlag(t *testing.T) {
 		Run: emptyRun,
 	}
 	flagname := "flag"
-	rootCmd.Flags().String(flagname, "", "A flag")
+	rootCmd.Flags().New(flagname, "", "A flag")
 
 	// Test that multiple activeHelp message can be added
 	_ = rootCmd.RegisterFlagCompletionFunc(flagname, func(cmd *Command, args []string, toComplete string) ([]string, ShellCompDirective) {
@@ -299,7 +299,7 @@ func TestConfigActiveHelp(t *testing.T) {
 	os.Setenv(activeHelpEnvVar(rootCmd.Name()), activeHelpCfg)
 
 	flagname := "flag"
-	childCmd.Flags().String(flagname, "", "A flag")
+	childCmd.Flags().New(flagname, "", "A flag")
 
 	// Test that multiple activeHelp message can be added
 	_ = childCmd.RegisterFlagCompletionFunc(flagname, func(cmd *Command, args []string, toComplete string) ([]string, ShellCompDirective) {

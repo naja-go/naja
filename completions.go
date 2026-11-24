@@ -22,7 +22,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/spf13/pflag"
+	"github.com/naja-go/gpflag"
 )
 
 const (
@@ -35,7 +35,7 @@ const (
 )
 
 // Global map of flag completion functions. Make sure to use flagCompletionMutex before you try to read and write from it.
-var flagCompletionFunctions = map[*pflag.Flag]CompletionFunc{}
+var flagCompletionFunctions = map[*gpflag.Flag]CompletionFunc{}
 
 // lock for reading and writing from flagCompletionFunctions
 var flagCompletionMutex = &sync.RWMutex{}
@@ -305,7 +305,7 @@ func (c *Command) initCompleteCmd(args []string) {
 	}
 }
 
-// SliceValue is a reduced version of [pflag.SliceValue]. It is used to detect
+// SliceValue is a reduced version of [gpflag.SliceValue]. It is used to detect
 // flags that accept multiple values and therefore can provide completion
 // multiple times.
 type SliceValue interface {
@@ -444,7 +444,7 @@ func (c *Command) getCompletions(args []string) (*Command, []Completion, ShellCo
 
 		// If we have not found any required flags, only then can we show regular flags
 		if len(completions) == 0 {
-			doCompleteFlags := func(flag *pflag.Flag) {
+			doCompleteFlags := func(flag *gpflag.Flag) {
 				_, acceptsMultiple := flag.Value.(SliceValue)
 				acceptsMultiple = acceptsMultiple ||
 					strings.Contains(flag.Value.Type(), "Slice") ||
@@ -461,7 +461,7 @@ func (c *Command) getCompletions(args []string) (*Command, []Completion, ShellCo
 			// We cannot use finalCmd.Flags() because we may not have called ParsedFlags() for commands
 			// that have set DisableFlagParsing; it is ParseFlags() that merges the inherited and
 			// non-inherited flags.
-			finalCmd.InheritedFlags().VisitAll(func(flag *pflag.Flag) {
+			finalCmd.InheritedFlags().VisitAll(func(flag *gpflag.Flag) {
 				doCompleteFlags(flag)
 			})
 			// Try to complete non-inherited flags even if DisableFlagParsing==true.
@@ -469,7 +469,7 @@ func (c *Command) getCompletions(args []string) (*Command, []Completion, ShellCo
 			// if the actual parsing of flags is not done by Cobra.
 			// For instance, Helm uses this to provide flag name completion for
 			// some of its plugins.
-			finalCmd.NonInheritedFlags().VisitAll(func(flag *pflag.Flag) {
+			finalCmd.NonInheritedFlags().VisitAll(func(flag *gpflag.Flag) {
 				doCompleteFlags(flag)
 			})
 		}
@@ -505,7 +505,7 @@ func (c *Command) getCompletions(args []string) (*Command, []Completion, ShellCo
 			if !finalCmd.Root().TraverseChildren {
 				// Check if there are any local, non-persistent flags on the command-line
 				localNonPersistentFlags := finalCmd.LocalNonPersistentFlags()
-				finalCmd.NonInheritedFlags().VisitAll(func(flag *pflag.Flag) {
+				finalCmd.NonInheritedFlags().VisitAll(func(flag *gpflag.Flag) {
 					if localNonPersistentFlags.Lookup(flag.Name) != nil && flag.Changed {
 						foundLocalNonPersistentFlag = true
 					}
@@ -596,7 +596,7 @@ func helpOrVersionFlagPresent(cmd *Command) bool {
 	return false
 }
 
-func getFlagNameCompletions(flag *pflag.Flag, toComplete string) []Completion {
+func getFlagNameCompletions(flag *gpflag.Flag, toComplete string) []Completion {
 	if nonCompletableFlag(flag) {
 		return []Completion{}
 	}
@@ -632,7 +632,7 @@ func getFlagNameCompletions(flag *pflag.Flag, toComplete string) []Completion {
 func completeRequireFlags(finalCmd *Command, toComplete string) []Completion {
 	var completions []Completion
 
-	doCompleteRequiredFlags := func(flag *pflag.Flag) {
+	doCompleteRequiredFlags := func(flag *gpflag.Flag) {
 		if _, present := flag.Annotations[BashCompOneRequiredFlag]; present {
 			if !flag.Changed {
 				// If the flag is not already present, we suggest it as a completion
@@ -644,17 +644,17 @@ func completeRequireFlags(finalCmd *Command, toComplete string) []Completion {
 	// We cannot use finalCmd.Flags() because we may not have called ParsedFlags() for commands
 	// that have set DisableFlagParsing; it is ParseFlags() that merges the inherited and
 	// non-inherited flags.
-	finalCmd.InheritedFlags().VisitAll(func(flag *pflag.Flag) {
+	finalCmd.InheritedFlags().VisitAll(func(flag *gpflag.Flag) {
 		doCompleteRequiredFlags(flag)
 	})
-	finalCmd.NonInheritedFlags().VisitAll(func(flag *pflag.Flag) {
+	finalCmd.NonInheritedFlags().VisitAll(func(flag *gpflag.Flag) {
 		doCompleteRequiredFlags(flag)
 	})
 
 	return completions
 }
 
-func checkIfFlagCompletion(finalCmd *Command, args []string, lastArg string) (*pflag.Flag, []string, string, error) {
+func checkIfFlagCompletion(finalCmd *Command, args []string, lastArg string) (*gpflag.Flag, []string, string, error) {
 	if finalCmd.DisableFlagParsing {
 		// We only do flag completion if we are allowed to parse flags
 		// This is important for commands which have requested to do their own flag completion.
@@ -833,7 +833,7 @@ You will need to start a new shell for this setup to take effect.
 		},
 	}
 	if haveNoDescFlag {
-		bash.Flags().BoolVar(&noDesc, compCmdNoDescFlagName, compCmdNoDescFlagDefault, compCmdNoDescFlagDesc)
+		bash.Flags().NewVar(&noDesc, compCmdNoDescFlagName, compCmdNoDescFlagDefault, compCmdNoDescFlagDesc)
 	}
 
 	zsh := &Command{
@@ -872,7 +872,7 @@ You will need to start a new shell for this setup to take effect.
 		},
 	}
 	if haveNoDescFlag {
-		zsh.Flags().BoolVar(&noDesc, compCmdNoDescFlagName, compCmdNoDescFlagDefault, compCmdNoDescFlagDesc)
+		zsh.Flags().NewVar(&noDesc, compCmdNoDescFlagName, compCmdNoDescFlagDefault, compCmdNoDescFlagDesc)
 	}
 
 	fish := &Command{
@@ -897,7 +897,7 @@ You will need to start a new shell for this setup to take effect.
 		},
 	}
 	if haveNoDescFlag {
-		fish.Flags().BoolVar(&noDesc, compCmdNoDescFlagName, compCmdNoDescFlagDefault, compCmdNoDescFlagDesc)
+		fish.Flags().NewVar(&noDesc, compCmdNoDescFlagName, compCmdNoDescFlagDefault, compCmdNoDescFlagDesc)
 	}
 
 	powershell := &Command{
@@ -923,13 +923,13 @@ to your powershell profile.
 		},
 	}
 	if haveNoDescFlag {
-		powershell.Flags().BoolVar(&noDesc, compCmdNoDescFlagName, compCmdNoDescFlagDefault, compCmdNoDescFlagDesc)
+		powershell.Flags().NewVar(&noDesc, compCmdNoDescFlagName, compCmdNoDescFlagDefault, compCmdNoDescFlagDesc)
 	}
 
 	completionCmd.AddCommand(bash, zsh, fish, powershell)
 }
 
-func findFlag(cmd *Command, name string) *pflag.Flag {
+func findFlag(cmd *Command, name string) *gpflag.Flag {
 	flagSet := cmd.Flags()
 	if len(name) == 1 {
 		// First convert the short flag into a long flag

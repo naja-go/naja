@@ -27,16 +27,16 @@ func TestValidateFlagGroups(t *testing.T) {
 			}}
 		// Define lots of flags to utilize for testing.
 		for _, v := range []string{"a", "b", "c", "d"} {
-			c.Flags().String(v, "", "")
+			c.Flags().New(v, "", "")
 		}
 		for _, v := range []string{"e", "f", "g"} {
-			c.PersistentFlags().String(v, "", "")
+			c.PersistentFlags().New(v, "", "")
 		}
 		subC := &Command{
 			Use: "subcmd",
 			Run: func(cmd *Command, args []string) {
 			}}
-		subC.Flags().String("subonly", "", "")
+		subC.Flags().New("subonly", "", "")
 		c.AddCommand(subC)
 		return c
 	}

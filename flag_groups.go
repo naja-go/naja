@@ -19,7 +19,7 @@ import (
 	"sort"
 	"strings"
 
-	flag "github.com/spf13/pflag"
+	"github.com/naja-go/gpflag"
 )
 
 const (
@@ -90,7 +90,7 @@ func (c *Command) ValidateFlagGroups() error {
 	groupStatus := map[string]map[string]bool{}
 	oneRequiredGroupStatus := map[string]map[string]bool{}
 	mutuallyExclusiveGroupStatus := map[string]map[string]bool{}
-	flags.VisitAll(func(pflag *flag.Flag) {
+	flags.VisitAll(func(pflag *gpflag.Flag) {
 		processFlagForGroupAnnotation(flags, pflag, requiredAsGroupAnnotation, groupStatus)
 		processFlagForGroupAnnotation(flags, pflag, oneRequiredAnnotation, oneRequiredGroupStatus)
 		processFlagForGroupAnnotation(flags, pflag, mutuallyExclusiveAnnotation, mutuallyExclusiveGroupStatus)
@@ -108,7 +108,7 @@ func (c *Command) ValidateFlagGroups() error {
 	return nil
 }
 
-func hasAllFlags(fs *flag.FlagSet, flagnames ...string) bool {
+func hasAllFlags(fs *gpflag.FlagSet, flagnames ...string) bool {
 	for _, fname := range flagnames {
 		f := fs.Lookup(fname)
 		if f == nil {
@@ -118,8 +118,8 @@ func hasAllFlags(fs *flag.FlagSet, flagnames ...string) bool {
 	return true
 }
 
-func processFlagForGroupAnnotation(flags *flag.FlagSet, pflag *flag.Flag, annotation string, groupStatus map[string]map[string]bool) {
-	groupInfo, found := pflag.Annotations[annotation]
+func processFlagForGroupAnnotation(flags *gpflag.FlagSet, f *gpflag.Flag, annotation string, groupStatus map[string]map[string]bool) {
+	groupInfo, found := f.Annotations[annotation]
 	if found {
 		for _, group := range groupInfo {
 			if groupStatus[group] == nil {
@@ -136,7 +136,7 @@ func processFlagForGroupAnnotation(flags *flag.FlagSet, pflag *flag.Flag, annota
 				}
 			}
 
-			groupStatus[group][pflag.Name] = pflag.Changed
+			groupStatus[group][f.Name] = f.Changed
 		}
 	}
 }
@@ -231,7 +231,7 @@ func (c *Command) enforceFlagGroupsForCompletion() {
 	groupStatus := map[string]map[string]bool{}
 	oneRequiredGroupStatus := map[string]map[string]bool{}
 	mutuallyExclusiveGroupStatus := map[string]map[string]bool{}
-	c.Flags().VisitAll(func(pflag *flag.Flag) {
+	c.Flags().VisitAll(func(pflag *gpflag.Flag) {
 		processFlagForGroupAnnotation(flags, pflag, requiredAsGroupAnnotation, groupStatus)
 		processFlagForGroupAnnotation(flags, pflag, oneRequiredAnnotation, oneRequiredGroupStatus)
 		processFlagForGroupAnnotation(flags, pflag, mutuallyExclusiveAnnotation, mutuallyExclusiveGroupStatus)

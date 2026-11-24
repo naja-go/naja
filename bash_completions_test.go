@@ -88,31 +88,31 @@ func TestBashCompletions(t *testing.T) {
 		BashCompletionFunction: bashCompletionFunc,
 		Run:                    emptyRun,
 	}
-	rootCmd.Flags().IntP("introot", "i", -1, "help message for flag introot")
+	rootCmd.Flags().NewP("introot", "i", -1, "help message for flag introot")
 	assertNoErr(t, rootCmd.MarkFlagRequired("introot"))
 
 	// Filename.
-	rootCmd.Flags().String("filename", "", "Enter a filename")
+	rootCmd.Flags().New("filename", "", "Enter a filename")
 	assertNoErr(t, rootCmd.MarkFlagFilename("filename", "json", "yaml", "yml"))
 
 	// Persistent filename.
-	rootCmd.PersistentFlags().String("persistent-filename", "", "Enter a filename")
+	rootCmd.PersistentFlags().New("persistent-filename", "", "Enter a filename")
 	assertNoErr(t, rootCmd.MarkPersistentFlagFilename("persistent-filename"))
 	assertNoErr(t, rootCmd.MarkPersistentFlagRequired("persistent-filename"))
 
 	// Filename extensions.
-	rootCmd.Flags().String("filename-ext", "", "Enter a filename (extension limited)")
+	rootCmd.Flags().New("filename-ext", "", "Enter a filename (extension limited)")
 	assertNoErr(t, rootCmd.MarkFlagFilename("filename-ext"))
-	rootCmd.Flags().String("custom", "", "Enter a filename (extension limited)")
+	rootCmd.Flags().New("custom", "", "Enter a filename (extension limited)")
 	assertNoErr(t, rootCmd.MarkFlagCustom("custom", "__complete_custom"))
 
 	// Subdirectories in a given directory.
-	rootCmd.Flags().String("theme", "", "theme to use (located in /themes/THEMENAME/)")
+	rootCmd.Flags().New("theme", "", "theme to use (located in /themes/THEMENAME/)")
 	assertNoErr(t, rootCmd.Flags().SetAnnotation("theme", BashCompSubdirsInDir, []string{"themes"}))
 
 	// For two word flags check
-	rootCmd.Flags().StringP("two", "t", "", "this is two word flags")
-	rootCmd.Flags().BoolP("two-w-default", "T", false, "this is not two word flags")
+	rootCmd.Flags().NewP("two", "t", "", "this is two word flags")
+	rootCmd.Flags().NewP("two-w-default", "T", false, "this is not two word flags")
 
 	echoCmd := &Command{
 		Use:     "echo [string to echo]",
@@ -123,9 +123,9 @@ func TestBashCompletions(t *testing.T) {
 		Run:     emptyRun,
 	}
 
-	echoCmd.Flags().String("filename", "", "Enter a filename")
+	echoCmd.Flags().New("filename", "", "Enter a filename")
 	assertNoErr(t, echoCmd.MarkFlagFilename("filename", "json", "yaml", "yml"))
-	echoCmd.Flags().String("config", "", "config to use (located in /config/PROFILE/)")
+	echoCmd.Flags().New("config", "", "config to use (located in /config/PROFILE/)")
 	assertNoErr(t, echoCmd.Flags().SetAnnotation("config", BashCompSubdirsInDir, []string{"config"}))
 
 	printCmd := &Command{
@@ -230,7 +230,7 @@ func TestBashCompletionHiddenFlag(t *testing.T) {
 	c := &Command{Use: "c", Run: emptyRun}
 
 	const flagName = "hiddenFlag"
-	c.Flags().Bool(flagName, false, "")
+	c.Flags().New(flagName, false, "")
 	assertNoErr(t, c.Flags().MarkHidden(flagName))
 
 	buf := new(bytes.Buffer)
@@ -246,7 +246,7 @@ func TestBashCompletionDeprecatedFlag(t *testing.T) {
 	c := &Command{Use: "c", Run: emptyRun}
 
 	const flagName = "deprecated-flag"
-	c.Flags().Bool(flagName, false, "")
+	c.Flags().New(flagName, false, "")
 	assertNoErr(t, c.Flags().MarkDeprecated(flagName, "use --not-deprecated instead"))
 
 	buf := new(bytes.Buffer)
@@ -261,8 +261,8 @@ func TestBashCompletionDeprecatedFlag(t *testing.T) {
 func TestBashCompletionTraverseChildren(t *testing.T) {
 	c := &Command{Use: "c", Run: emptyRun, TraverseChildren: true}
 
-	c.Flags().StringP("string-flag", "s", "", "string flag")
-	c.Flags().BoolP("bool-flag", "b", false, "bool flag")
+	c.Flags().NewP("string-flag", "s", "", "string flag")
+	c.Flags().NewP("bool-flag", "b", false, "bool flag")
 
 	buf := new(bytes.Buffer)
 	assertNoErr(t, c.GenBashCompletion(buf))

@@ -26,8 +26,8 @@ import (
 	"time"
 
 	"github.com/cpuguy83/go-md2man/v2/md2man"
+	"github.com/naja-go/gpflag"
 	"github.com/naja-go/naja"
-	"github.com/spf13/pflag"
 )
 
 // GenManTree will generate a man page for this command and all descendants
@@ -156,8 +156,8 @@ func manPreamble(buf io.StringWriter, header *GenManHeader, cmd *naja.Command, d
 	naja.WriteStringAndCheck(buf, description+"\n\n")
 }
 
-func manPrintFlags(buf io.StringWriter, flags *pflag.FlagSet) {
-	flags.VisitAll(func(flag *pflag.Flag) {
+func manPrintFlags(buf io.StringWriter, flags *gpflag.FlagSet) {
+	flags.VisitAll(func(flag *gpflag.Flag) {
 		if len(flag.Deprecated) > 0 || flag.Hidden {
 			return
 		}

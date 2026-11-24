@@ -148,7 +148,7 @@ func TestGenManSeeAlso(t *testing.T) {
 
 func TestManPrintFlagsHidesShortDeprecated(t *testing.T) {
 	c := &naja.Command{}
-	c.Flags().StringP("foo", "f", "default", "Foo flag")
+	c.Flags().NewP("foo", "f", "default", "Foo flag")
 	assertNoErr(t, c.Flags().MarkShorthandDeprecated("foo", "don't use it no more"))
 
 	buf := new(bytes.Buffer)

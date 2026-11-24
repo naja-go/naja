@@ -22,8 +22,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/naja-go/gpflag"
 	"github.com/naja-go/naja"
-	"github.com/spf13/pflag"
 	"go.yaml.in/yaml/v3"
 )
 
@@ -146,10 +146,10 @@ func GenYamlCustom(cmd *naja.Command, w io.Writer, linkHandler func(string) stri
 	return nil
 }
 
-func genFlagResult(flags *pflag.FlagSet) []cmdOption {
+func genFlagResult(flags *gpflag.FlagSet) []cmdOption {
 	var result []cmdOption
 
-	flags.VisitAll(func(flag *pflag.Flag) {
+	flags.VisitAll(func(flag *gpflag.Flag) {
 		// Todo, when we mark a shorthand is deprecated, but specify an empty message.
 		// The flag.ShorthandDeprecated is empty as the shorthand is deprecated.
 		// Using len(flag.ShorthandDeprecated) > 0 can't handle this, others are ok.

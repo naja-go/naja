@@ -100,6 +100,9 @@ library](https://github.com/spf13/pflag), a fork of the flag standard library
 which maintains the same interface while adding POSIX compliance.
 
 # Installing
+
+This fork requires Go 1.27 or newer.
+
 Using Cobra is easy. First, use `go get` to install the latest version
 of the library.
 

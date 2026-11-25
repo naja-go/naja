@@ -1,8 +1,3 @@
-# changes to documentation generation
-"area/docs-generation": 
-- changed-files:
-  - any-glob-to-any-file: 'doc/**'
-
 # changes to the core cobra command
 "area/cobra-command":
 - changed-files:

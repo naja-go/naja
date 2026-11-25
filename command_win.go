@@ -21,7 +21,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/inconshreveable/mousetrap"
+	"github.com/naja-go/naja/pkg/mousetrap"
 )
 
 var preExecHookFn = preExecHook

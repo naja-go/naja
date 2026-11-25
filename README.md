@@ -80,7 +80,8 @@ GOPRIVATE=github.com/naja-go/naja go get github.com/naja-go/naja@main
 ```
 
 Then import `github.com/naja-go/naja` as package `naja`. If you generate
-documentation, import `github.com/naja-go/naja/doc` as package `doc`.
+documentation, use the separate [`github.com/naja-go/docgen`](https://github.com/naja-go/docgen)
+module, which replaces the former `naja/doc` package.
 
 # Usage
 

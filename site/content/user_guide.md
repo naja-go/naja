@@ -770,8 +770,9 @@ Run 'kubectl help' for usage.
 
 ## Generating documentation for your command
 
-Cobra can generate documentation based on subcommands, flags, etc.
-Read more about it in the [docs generation documentation](docgen/_index.md).
+Documentation for subcommands, flags, etc. can be generated as man pages, Markdown,
+reStructuredText or YAML with the separate `docgen` module.
+Read more about it in the [docgen documentation](https://github.com/naja-go/docgen).
 
 ## Generating shell completions
 

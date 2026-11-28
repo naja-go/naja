@@ -235,6 +235,18 @@ global flags, assign a flag as a persistent flag on the root.
 rootCmd.PersistentFlags().NewVarP(&Verbose, "verbose", "v", false, "verbose output")
 ```
 
+### Flags from the global flag set
+
+Cobra added every flag of `pflag.CommandLine` to the root command. Examples are
+the flags of the Go `flag` package and a `--version` flag that a library
+registered. gpflag has no global flag set, so Naja does not add these flags.
+After a move from Cobra they are gone, and the compiler does not report it. Add
+them to the root command in your code:
+
+```go
+rootCmd.PersistentFlags().AddGoFlagSet(flag.CommandLine)
+```
+
 ### Local Flags
 
 A flag can also be assigned locally, which will only apply to that specific command.

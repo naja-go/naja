@@ -91,7 +91,9 @@ such as `cobra.Command` to `naja.Command`. Use gpflag's `New`, `NewP`,
 `NewVar`, and `NewVarP` instead of type-specific flag constructors, and
 `Get[T]` or `TryGet[T]` instead of getters like `GetString`. To share flags
 across a command tree, register them on the root's `PersistentFlags()`;
-there is no package-global flag set. To ignore unknown flags, set
+there is no package-global flag set, so
+[flags that Cobra took from it](site/content/user_guide.md#flags-from-the-global-flag-set)
+are gone. To ignore unknown flags, set
 `FParseErrWhitelist.UnknownFlagsHandling` to `gpflag.IgnoreUnknownFlag`.
 
 # License

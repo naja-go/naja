@@ -72,11 +72,10 @@ port := cmd.Flags().NewP("port", "p", uint16(8080), "port to listen on")
 
 # Installing
 
-Naja requires Go 1.27 or newer. While Naja is private, configure Git credentials
-with read access to `naja-go/naja` and add `github.com/naja-go/naja` to `GOPRIVATE`:
+Naja requires Go 1.27 or newer.
 
 ```sh
-GOPRIVATE=github.com/naja-go/naja go get github.com/naja-go/naja@main
+go get github.com/naja-go/naja@main
 ```
 
 Then import `github.com/naja-go/naja` as package `naja`. If you generate
